@@ -301,3 +301,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+*.csv
+HI-2012-4county-5sector.xlsx
+*.filters
+LSD.vcxproj
