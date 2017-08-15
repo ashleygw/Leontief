@@ -13,19 +13,27 @@ std::vector<std::vector<std::string> > load_db(std::istream &f)
 	std::vector<std::vector<std::string> > database;
 	std::string csvLine;
 	while (std::getline(f, csvLine)) {
+		bool is_empty = true;
 		std::istringstream csvStream(csvLine);
 		std::vector<std::string> csvRow;
 		std::string csvCol;
 		while (std::getline(csvStream, csvCol, ','))
 			csvRow.push_back(csvCol);
-		database.push_back(csvRow);
+		//Check if whole row is empty
+		for (int i = 0; i < csvRow.size(); ++i)
+		{
+			if (!csvRow[i].empty())
+				is_empty = false;
+		}
+		if(!is_empty)
+			database.push_back(csvRow);
 	}
 	return database;
 }
 std::vector<std::string> load_all_sectors(std::vector<std::vector<std::string> > &db)
 {
 	std::vector<std::string> sectors;
-	for (int i = 1; i < db.size() - 2; ++i)
+	for (int i = 1; (i < db[0].size() - 2) && db[0][i].size(); ++i)
 	{
 		sectors.push_back(db[0][i]);
 	}
@@ -90,13 +98,17 @@ double build_Leontief_value(std::vector<std::vector<std::string> > &db, int inde
 std::vector<double> build_Leontief_values(std::vector<std::vector<std::string> > &db)
 {
 	std::vector<double> values;
-	for (int i = 1; i < db.size() - 2; ++i)
+	for (int i = 1; i < db[0].size() - 2; ++i)
 	{
 		values.push_back(build_Leontief_value(db, i - 1));
 	}
 	return values;
 }
 
+double round(double in, double precision)
+{
+	return (int)(in / precision) * precision;
+}
 void write_LSD(std::string file_in, std::vector<std::string> &all_sectors, std::vector<double> &Leontief_values)
 {
 	std::ofstream file;
@@ -107,7 +119,7 @@ void write_LSD(std::string file_in, std::vector<std::string> &all_sectors, std::
 	file << "LSD," << "Filename:  " << file_in << "\n\n";
 	for (int i = 0; i < all_sectors.size(); ++i)
 	{
-		file << all_sectors[i] << "," << Leontief_values[i] << "\n";
+		file << all_sectors[i] << "," << round(Leontief_values[i],.0001) << "\n";
 	}
 }
 
