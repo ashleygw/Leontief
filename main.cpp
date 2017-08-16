@@ -7,7 +7,7 @@
 #include <vector>
 #include <sstream>
 #include "Eigen/Dense"
-
+#include <numeric>
 std::vector<std::vector<std::string> > load_db(std::istream &f)
 {
 	std::vector<std::vector<std::string> > database;
@@ -39,8 +39,6 @@ std::vector<std::string> load_all_sectors(std::vector<std::vector<std::string> >
 	}
 	return sectors;
 }
-
-
 double build_Leontief_value(std::vector<std::vector<std::string> > &db, int index)
 {
 	//Size is reduced and data is converted from string to double
@@ -94,7 +92,6 @@ double build_Leontief_value(std::vector<std::vector<std::string> > &db, int inde
 	A = A.inverse();
 	return (A*mult_vector).sum() + 1;
 }
-
 std::vector<double> build_Leontief_values(std::vector<std::vector<std::string> > &db)
 {
 	std::vector<double> values;
@@ -104,12 +101,11 @@ std::vector<double> build_Leontief_values(std::vector<std::vector<std::string> >
 	}
 	return values;
 }
-
 double round(double in, double precision)
 {
 	return (int)(in / precision) * precision;
 }
-void write_LSD(std::string file_in, std::vector<std::string> &all_sectors, std::vector<double> &Leontief_values)
+void write_LSD(std::string file_in, std::vector<std::string> &all_sectors, std::vector<double> &Leontief_values, std::vector<double> &LI_values)
 {
 	std::ofstream file;
 	std::string temp = "LSD(";
@@ -117,12 +113,23 @@ void write_LSD(std::string file_in, std::vector<std::string> &all_sectors, std::
 	temp += temp2 + ").csv";
 	file.open(temp.c_str());
 	file << "LSD," << "Filename:  " << file_in << "\n\n";
+	file << ",Leontief,XLI\n";
 	for (int i = 0; i < all_sectors.size(); ++i)
 	{
-		file << all_sectors[i] << "," << round(Leontief_values[i],.0001) << "\n";
+		file << all_sectors[i] << "," << round(Leontief_values[i],.0001) << ","<< round(LI_values[i],0.01) << "\n";
 	}
 }
-
+std::vector<double> build_LI_values(std::vector<double> Leontief_values)
+{
+	int k = Leontief_values.size();
+	double sum = std::accumulate(Leontief_values.begin(), Leontief_values.end(), 0.0);
+	std::vector<double> ret(k);
+	for (int i = 0; i < k; ++i)
+	{
+		ret[i] = Leontief_values[i]/(sum/k);
+	}
+	return ret;
+}
 int main(int argc, char* argv[])
 {
 	std::fstream file;
@@ -156,8 +163,9 @@ int main(int argc, char* argv[])
 	std::cout << "Complete!\n";
 	std::cout << "Building Leontief values...\n";
 	std::vector<double> Leontief_values = build_Leontief_values(db);
+	std::vector<double> LI_values = build_LI_values(Leontief_values);
 	std::cout << "Complete!\n";
 	std::cout << "Writing to file...\n";
-	write_LSD(file_in, all_sectors, Leontief_values);
+	write_LSD(file_in, all_sectors, Leontief_values, LI_values);
 	std::cout << "Finished.";
 }
