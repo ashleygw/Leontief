@@ -8,6 +8,7 @@
 #include <sstream>
 #include "Eigen/Dense"
 #include <numeric>
+
 std::vector<std::vector<std::string> > load_db(std::istream &f)
 {
 	std::vector<std::vector<std::string> > database;
@@ -142,7 +143,6 @@ int main(int argc, char* argv[])
 			std::getchar();
 			return 1;
 		}
-
 	}
 	else
 	{
